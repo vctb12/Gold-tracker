@@ -153,7 +153,7 @@ function tryRowLayout(rows: Cell[][]): PricePoint[] {
   let bestScore = 0;
 
   for (let i = 0; i < Math.min(rows.length, 20); i += 1) {
-    const score = rows[i].reduce((count, cell) => {
+    const score = rows[i].reduce<number>((count, cell) => {
       return count + (parsePossibleDate(cell) ? 1 : 0);
     }, 0);
 
