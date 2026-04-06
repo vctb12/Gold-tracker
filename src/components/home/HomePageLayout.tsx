@@ -1,19 +1,19 @@
 import { ChartPanelPlaceholder } from "./ChartPanelPlaceholder";
 import { HeroPriceCard } from "./HeroPriceCard";
-import { InsightRail } from "./InsightRail";
-import { KpiRow } from "./KpiRow";
 import { RetailEstimatorPreview } from "./RetailEstimatorPreview";
-import { PriceSnapshot } from "@/types/price";
+import { PricePoint, PriceSnapshot } from "@/types/price";
 
-export function HomePageLayout({ snapshot }: { snapshot: PriceSnapshot }) {
+export function HomePageLayout({
+  snapshot,
+  history,
+}: {
+  snapshot: PriceSnapshot;
+  history: PricePoint[];
+}) {
   return (
     <main className="space-y-6 py-8">
       <HeroPriceCard snapshot={snapshot} />
-      <KpiRow />
-      <section className="grid gap-6 lg:grid-cols-[1.7fr,1fr]">
-        <ChartPanelPlaceholder />
-        <InsightRail />
-      </section>
+      <ChartPanelPlaceholder series={history} />
       <RetailEstimatorPreview />
     </main>
   );
