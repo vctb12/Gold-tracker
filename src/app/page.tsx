@@ -1,7 +1,14 @@
 import { HomePageLayout } from "@/components/home/HomePageLayout";
-import { getPriceSnapshot } from "@/lib/data/getPriceSnapshot";
+import {
+  getLatestGoldSnapshot,
+  getPriceHistory,
+} from "@/lib/data/getPriceHistory";
 
 export default async function HomePage() {
-  const snapshot = await getPriceSnapshot();
-  return <HomePageLayout snapshot={snapshot} />;
+  const [snapshot, history] = await Promise.all([
+    getLatestGoldSnapshot(),
+    getPriceHistory("MAX"),
+  ]);
+
+  return <HomePageLayout snapshot={snapshot} history={history} />;
 }
