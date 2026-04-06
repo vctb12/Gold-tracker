@@ -1,6 +1,10 @@
 import { LandingPage } from "@/types/landing";
 
-const countries = ["usa", "uk", "india", "canada", "australia", "uae", "singapore", "germany", "france", "japan"];
+const countries = [
+  "usa", "uk", "india", "canada", "australia", "uae",
+  "singapore", "germany", "france", "japan", "brazil", "mexico"
+];
+
 const intents = [
   "today",
   "per-gram",
@@ -19,29 +23,42 @@ function titleCase(v: string) {
 export function buildExpandedLandingPages(): LandingPage[] {
   const pages: LandingPage[] = [];
 
-  for (const c of countries) {
+  for (const country of countries) {
     for (const intent of intents) {
-      const slug = `gold-price-${c}-${intent}`;
-      const country = titleCase(c);
+      const countryLabel = titleCase(country);
       const intentLabel = titleCase(intent);
 
       pages.push({
-        slug,
-        title: `Gold Price ${country} ${intentLabel} | Reference Insights`,
-        description: `Reference gold pricing context for ${country}: ${intentLabel}.`,
-        h1: `Gold Price ${country} — ${intentLabel}`,
-        intro: `Purpose-built reference page for ${country} users tracking ${intentLabel}.`,
-        referenceNote: "Reference/spot values are benchmark context and may be delayed or cached.",
-        retailNote: "Retail/jewelry outcomes include premiums, making fees, taxes, and seller spread.",
-        ctaLabel: "Open Dashboard",
-        ctaHref: "/",
+        slug: `gold-price-${country}-${intent}`,
+        title: `Gold Price ${countryLabel} ${intentLabel} | Reference Insights`,
+        description: `Reference benchmark context for ${countryLabel}: ${intentLabel}.`,
+        h1: `Gold Price ${countryLabel} — ${intentLabel}`,
+        intro: `Purpose-built reference page for ${countryLabel} users tracking ${intentLabel}.`,
+        referenceNote:
+          "Reference/spot values are benchmark context and may be delayed, cached, or fallback-labeled.",
+        retailNote:
+          "Retail/jewelry prices are separate outcomes with premiums, making fees, taxes, and seller spread.",
+        ctaLabel: intent.includes("history") ? "Open Full History" : intent === "alerts-guide" ? "Go to Alerts" : "Open Dashboard",
+        ctaHref: intent.includes("history") ? "/history" : intent === "alerts-guide" ? "/alerts" : "/",
         sections: [
-          { heading: "Reference context", body: "Use this page for benchmark trend context and comparison." },
-          { heading: "Retail interpretation", body: "Do not treat benchmark values as final checkout quotes." }
+          {
+            heading: "Reference context",
+            body: "Use benchmark values for trend/context, not final checkout assumptions."
+          },
+          {
+            heading: "Retail interpretation",
+            body: "Retail outcomes include taxes, fees, fabrication/making charges, and seller margin."
+          }
         ],
         faqs: [
-          { q: "Is this retail checkout pricing?", a: "No. This is benchmark reference context." },
-          { q: "Why can local prices differ?", a: "Local taxes, fees, premiums, and inventory dynamics." }
+          {
+            q: "Is this retail checkout pricing?",
+            a: "No. This is benchmark reference context, not final store checkout."
+          },
+          {
+            q: "Why can local prices differ?",
+            a: "Local taxes, conversion spread, premiums, and inventory conditions."
+          }
         ]
       });
     }
