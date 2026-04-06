@@ -1,6 +1,5 @@
 import { DeltaBadge } from "@/components/market/DeltaBadge";
 import { PriceValue } from "@/components/market/PriceValue";
-import { DataFreshnessBanner } from "@/components/market/DataFreshnessBanner";
 import { DisclosureTooltip } from "@/components/trust/DisclosureTooltip";
 import { QualityBadge } from "@/components/trust/QualityBadge";
 import { SourceBadge } from "@/components/trust/SourceBadge";
@@ -8,12 +7,10 @@ import { TimestampLabel } from "@/components/trust/TimestampLabel";
 import { PriceSnapshot } from "@/types/price";
 
 export function HeroPriceCard({ snapshot }: { snapshot: PriceSnapshot }) {
-  const { quality } = snapshot;
-
   return (
     <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]">
       <p className="text-sm uppercase tracking-wide text-[var(--color-text-muted)]">
-        Reference spot price
+        Latest official monthly gold average
       </p>
 
       <div className="mt-2 flex flex-wrap items-end gap-3">
@@ -24,41 +21,25 @@ export function HeroPriceCard({ snapshot }: { snapshot: PriceSnapshot }) {
         />
       </div>
 
+      <div className="mt-2 text-xs text-[var(--color-text-muted)]">
+        Change shown vs previous published observation.
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-2">
         <SourceBadge
           sourceName={snapshot.provenance.sourceName}
           sourceInstrument={snapshot.provenance.sourceInstrument}
         />
-
-        <QualityBadge mode={quality.isDelayed ? "DELAYED" : "LIVE"} />
-        {quality.isCached && <QualityBadge mode="CACHED" />}
-        {quality.isFallback && <QualityBadge mode="FALLBACK" />}
-        {quality.isEstimated && <QualityBadge mode="ESTIMATED" />}
-        {quality.isDerived && <QualityBadge mode="DERIVED" />}
+        {snapshot.quality.isCached ? <QualityBadge mode="CACHED" /> : null}
+        {snapshot.quality.isFallback ? <QualityBadge mode="FALLBACK" /> : null}
       </div>
 
       <div className="mt-3">
         <TimestampLabel asOf={snapshot.provenance.asOf} />
       </div>
 
-      {(quality.isDelayed || quality.isCached || quality.isFallback) && (
-        <div className="mt-3">
-          <DataFreshnessBanner
-            text={
-              quality.isFallback
-                ? `Fallback value in use${quality.fallbackReason ? `: ${quality.fallbackReason}` : "."}`
-                : quality.isCached
-                ? `Cached value shown${quality.cacheAgeSec ? ` (${quality.cacheAgeSec}s old)` : "."}`
-                : quality.isDelayed
-                ? `Delayed reference feed${quality.delayMinutes ? ` (${quality.delayMinutes} min)` : "."}`
-                : ""
-            }
-          />
-        </div>
-      )}
-
       <div className="mt-3">
-        <DisclosureTooltip text="Reference spot price is not retail/jewelry checkout price. Retail values are estimated/derived and must be labeled as such." />
+        <DisclosureTooltip text="This card shows the latest published official monthly value, not a live executable intraday quote. Retail/jewelry prices remain separate and must be calculated with premiums, making charges, and taxes." />
       </div>
     </section>
   );
