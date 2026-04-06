@@ -1,6 +1,7 @@
 import { LandingPage } from "@/types/landing";
+import { buildExpandedLandingPages } from "./expand";
 
-export const landingPages: LandingPage[] = [
+const seedLandingPages: LandingPage[] = [
   {
     slug: "gold-price-today-usd",
     title: "Gold Price Today in USD | Reference Spot & Insights",
@@ -230,3 +231,6 @@ export const landingPages: LandingPage[] = [
     ]
   }
 ];
+
+
+export const landingPages: LandingPage[] = [...seedLandingPages, ...buildExpandedLandingPages()];
