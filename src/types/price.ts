@@ -1,4 +1,12 @@
-export type QualityMode = "LIVE" | "DELAYED" | "CACHED" | "FALLBACK" | "ESTIMATED" | "DERIVED";
+export type QualityMode =
+  | "LIVE"
+  | "DELAYED"
+  | "CACHED"
+  | "FALLBACK"
+  | "ESTIMATED"
+  | "DERIVED";
+
+export type PriceRange = "6M" | "1Y" | "5Y" | "10Y" | "MAX";
 
 export type QualityFlags = {
   isDelayed: boolean;
@@ -18,10 +26,17 @@ export type Provenance = {
   asOf: string;
 };
 
+export type PricePoint = {
+  ts: string;
+  close: number;
+  currency: "USD";
+  unit: "XAU_OZ";
+};
+
 export type PriceSnapshot = {
   value: number;
   currency: "USD";
-  unit: "XAU_OZ" | "XAU_G";
+  unit: "XAU_OZ";
   change24hAbs: number;
   change24hPct: number;
   quality: QualityFlags;
