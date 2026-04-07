@@ -1,22 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
-type AlertRule = {
-  id: string;
-  label: string;
-  comparator: "above" | "below";
-  threshold: number;
-  createdAt: string;
-  active: boolean;
-};
-
-type TriggerEvent = {
-  id: string;
-  ruleId: string;
-  occurredAt: string;
-  referenceValue: number;
-};
+import { PipelineStatus } from "./PipelineStatus";
+import { makeEngineContext, runAlertEngine } from "@/lib/alerts/engine";
+import { AlertEngineRunResult, AlertRule, TriggerEvent } from "@/lib/alerts/types";
 
 const RULES_KEY = "goldtracker.alert.rules";
 const EVENTS_KEY = "goldtracker.alert.events";
@@ -41,12 +28,23 @@ function readStoredEvents(): TriggerEvent[] {
   }
 }
 
-export function AlertWorkbench({ referenceSpot }: { referenceSpot: number }) {
+export function AlertWorkbench({
+  referenceSpot,
+  sourceName,
+  isDelayed,
+  isFallback,
+}: {
+  referenceSpot: number;
+  sourceName: string;
+  isDelayed: boolean;
+  isFallback: boolean;
+}) {
   const [label, setLabel] = useState("My benchmark alert");
   const [comparator, setComparator] = useState<"above" | "below">("above");
   const [threshold, setThreshold] = useState(referenceSpot.toFixed(2));
   const [rules, setRules] = useState<AlertRule[]>(readStoredRules);
   const [events, setEvents] = useState<TriggerEvent[]>(readStoredEvents);
+  const [runResult, setRunResult] = useState<AlertEngineRunResult | null>(null);
 
   const storageReady = typeof window !== "undefined";
 
@@ -59,6 +57,24 @@ export function AlertWorkbench({ referenceSpot }: { referenceSpot: number }) {
     if (!storageReady) return;
     localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
   }, [events, storageReady]);
+
+  useEffect(() => {
+    const context = makeEngineContext({
+      benchmarkValue: referenceSpot,
+      sourceName,
+      isDelayed,
+      isFallback,
+    });
+
+    void runAlertEngine({
+      rules,
+      context,
+      options: {
+        webhookEndpoint: "",
+        senderEmail: "",
+      },
+    }).then(setRunResult);
+  }, [rules, referenceSpot, sourceName, isDelayed, isFallback]);
 
   const rulePreview = useMemo(() => {
     return rules.map((rule) => {
@@ -88,6 +104,10 @@ export function AlertWorkbench({ referenceSpot }: { referenceSpot: number }) {
       threshold: parsedThreshold,
       createdAt: new Date().toISOString(),
       active: true,
+      cooldownMinutes: 10,
+      metadata: {
+        mode: "preview",
+      },
     };
 
     const hitNow =
@@ -170,6 +190,8 @@ export function AlertWorkbench({ referenceSpot }: { referenceSpot: number }) {
           </div>
         </div>
       </section>
+
+      <PipelineStatus result={runResult} />
 
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <h2 className="text-lg font-semibold text-[var(--color-text)]">Active rules</h2>
