@@ -8,6 +8,8 @@ import { inferIntentFromSlug } from "@/lib/landing/inferIntent";
 import { RelatedLandingLinks } from "./RelatedLandingLinks";
 import { LandingHighlights } from "./LandingHighlights";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
+import { Breadcrumbs } from "@/components/common/Breadcrumbs";
+
 
 export function LandingTemplate({ page }: { page: LandingPage }) {
   const intent = inferIntentFromSlug(page.slug);

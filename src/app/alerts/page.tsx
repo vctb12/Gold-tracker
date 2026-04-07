@@ -27,6 +27,7 @@ export default async function AlertsPage() {
         isDelayed={snapshot.quality.isDelayed}
         isFallback={snapshot.quality.isFallback}
       />
+
     </main>
   );
 }

@@ -9,7 +9,6 @@ export default function LearnPage() {
           { label: "Learn" },
         ]}
       />
-
       <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
         <h1 className="text-2xl font-semibold text-[var(--color-text)]">Methodology & trust</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
