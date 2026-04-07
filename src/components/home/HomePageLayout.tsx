@@ -14,7 +14,7 @@ export function HomePageLayout({
     <main className="space-y-6 py-8">
       <HeroPriceCard snapshot={snapshot} />
       <ChartPanelPlaceholder series={history} />
-      <RetailEstimatorPreview />
+      <RetailEstimatorPreview referenceSpot={snapshot.value} />
     </main>
   );
 }

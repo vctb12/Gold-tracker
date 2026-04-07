@@ -14,41 +14,28 @@ const RANGE_LIMITS: Record<PriceRange, number | null> = {
 
 type Cell = string | number | Date | null;
 
+type SeriesLoadResult = {
+  series: PricePoint[];
+  sourceName: string;
+  sourceInstrument: string;
+  isFallback: boolean;
+};
+
 export async function getPriceHistory(range: PriceRange = "MAX"): Promise<PricePoint[]> {
-  const response = await fetch(WORLD_BANK_MONTHLY_URL, {
-    next: { revalidate: 60 * 60 * 24 },
-    headers: {
-      Accept:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream;q=0.9,*/*;q=0.8",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch World Bank gold history: ${response.status}`);
-  }
-
-  const buffer = Buffer.from(await response.arrayBuffer());
-  const workbook = read(buffer, { type: "buffer", cellDates: true });
-
-  const fullSeries = extractGoldSeries(workbook);
-
-  if (!fullSeries.length) {
-    throw new Error("No gold history rows were parsed from the World Bank workbook.");
-  }
-
+  const full = await loadGoldSeries();
   const limit = RANGE_LIMITS[range];
-  return limit === null ? fullSeries : fullSeries.slice(-limit);
+  return limit === null ? full.series : full.series.slice(-limit);
 }
 
 export async function getLatestGoldSnapshot(): Promise<PriceSnapshot> {
-  const fullSeries = await getPriceHistory("MAX");
+  const full = await loadGoldSeries();
 
-  if (fullSeries.length < 2) {
+  if (full.series.length < 2) {
     throw new Error("Not enough observations to build the latest snapshot.");
   }
 
-  const latest = fullSeries[fullSeries.length - 1];
-  const previous = fullSeries[fullSeries.length - 2];
+  const latest = full.series[full.series.length - 1];
+  const previous = full.series[full.series.length - 2];
 
   const changeAbs = latest.close - previous.close;
   const changePct = previous.close === 0 ? 0 : (changeAbs / previous.close) * 100;
@@ -61,19 +48,78 @@ export async function getLatestGoldSnapshot(): Promise<PriceSnapshot> {
     change24hAbs: changeAbs,
     change24hPct: changePct,
     quality: {
-      isDelayed: false,
+      isDelayed: true,
+      delayMinutes: 60 * 24 * 30,
       isEstimated: false,
       isDerived: false,
-      isCached: false,
-      isFallback: false,
+      isCached: full.isFallback,
+      cacheAgeSec: full.isFallback ? 60 * 60 : undefined,
+      isFallback: full.isFallback,
+      fallbackReason: full.isFallback ? "Network/source unavailable during build" : undefined,
     },
     provenance: {
-      sourceName: "World Bank Pink Sheet",
-      sourceInstrument: "Gold monthly average of daily spot rates",
+      sourceName: full.sourceName,
+      sourceInstrument: full.sourceInstrument,
       fetchedAt: now,
       asOf: latest.ts,
     },
   };
+}
+
+async function loadGoldSeries(): Promise<SeriesLoadResult> {
+  try {
+    const response = await fetch(WORLD_BANK_MONTHLY_URL, {
+      next: { revalidate: 60 * 60 * 24 },
+      headers: {
+        Accept:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream;q=0.9,*/*;q=0.8",
+      },
+    });
+
+    if (!response.ok) throw new Error(`Source returned ${response.status}`);
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const workbook = read(buffer, { type: "buffer", cellDates: true });
+    const parsed = extractGoldSeries(workbook);
+
+    if (parsed.length >= 12) {
+      return {
+        series: parsed,
+        sourceName: "World Bank Pink Sheet",
+        sourceInstrument: "Gold monthly average of daily spot rates",
+        isFallback: false,
+      };
+    }
+  } catch {
+    // fall through to deterministic fallback
+  }
+
+  return {
+    series: buildFallbackSeries(),
+    sourceName: "Local fallback sample",
+    sourceInstrument: "Monthly reference sample for offline/static builds",
+    isFallback: true,
+  };
+}
+
+function buildFallbackSeries(): PricePoint[] {
+  const start = new Date(Date.UTC(2021, 0, 1));
+  const closes = [
+    1850, 1795, 1718, 1765, 1832, 1771, 1814, 1790, 1755, 1778, 1798, 1812,
+    1854, 1927, 1912, 1978, 1944, 1913, 1930, 1902, 1886, 1860, 1842, 1828,
+    1865, 1910, 1952, 1998, 2044, 1987, 1949, 1966, 1981, 2012, 2058, 2084,
+  ];
+
+  return closes.map((close, i) => {
+    const d = new Date(start);
+    d.setUTCMonth(start.getUTCMonth() + i);
+    return {
+      ts: d.toISOString(),
+      close,
+      currency: "USD",
+      unit: "XAU_OZ",
+    };
+  });
 }
 
 function extractGoldSeries(workbook: ReturnType<typeof read>): PricePoint[] {
@@ -86,14 +132,10 @@ function extractGoldSeries(workbook: ReturnType<typeof read>): PricePoint[] {
     });
 
     const columnSeries = tryColumnLayout(rows);
-    if (columnSeries.length >= 12) {
-      return normalizeSeries(columnSeries);
-    }
+    if (columnSeries.length >= 12) return normalizeSeries(columnSeries);
 
     const rowSeries = tryRowLayout(rows);
-    if (rowSeries.length >= 12) {
-      return normalizeSeries(rowSeries);
-    }
+    if (rowSeries.length >= 12) return normalizeSeries(rowSeries);
   }
 
   return [];
@@ -125,12 +167,7 @@ function tryColumnLayout(rows: Cell[][]): PricePoint[] {
 
     if (!date || value === null) continue;
 
-    points.push({
-      ts: date,
-      close: value,
-      currency: "USD",
-      unit: "XAU_OZ",
-    });
+    points.push({ ts: date, close: value, currency: "USD", unit: "XAU_OZ" });
   }
 
   return points;
@@ -175,12 +212,7 @@ function tryRowLayout(rows: Cell[][]): PricePoint[] {
 
     if (!date || value === null) continue;
 
-    points.push({
-      ts: date,
-      close: value,
-      currency: "USD",
-      unit: "XAU_OZ",
-    });
+    points.push({ ts: date, close: value, currency: "USD", unit: "XAU_OZ" });
   }
 
   return points;
@@ -194,9 +226,9 @@ function normalizeSeries(series: PricePoint[]): PricePoint[] {
     seen.set(point.ts, point);
   }
 
-  return [...seen.values()].sort((a, b) => {
-    return new Date(a.ts).getTime() - new Date(b.ts).getTime();
-  });
+  return [...seen.values()].sort(
+    (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
+  );
 }
 
 function normalizeText(value: string): string {
@@ -223,28 +255,20 @@ function parsePossibleDate(value: Cell): string | null {
 
   if (typeof value === "number") {
     const parsed = SSF.parse_date_code(value);
-    if (parsed?.y && parsed?.m) {
-      return toMonthIso(parsed.y, parsed.m);
-    }
+    if (parsed?.y && parsed?.m) return toMonthIso(parsed.y, parsed.m);
   }
 
   if (typeof value === "string") {
     const text = value.trim();
 
     const ymMatch = text.match(/^(\d{4})[-/](\d{1,2})$/);
-    if (ymMatch) {
-      return toMonthIso(Number(ymMatch[1]), Number(ymMatch[2]));
-    }
+    if (ymMatch) return toMonthIso(Number(ymMatch[1]), Number(ymMatch[2]));
 
     const ymdMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-    if (ymdMatch) {
-      return toMonthIso(Number(ymdMatch[1]), Number(ymdMatch[2]));
-    }
+    if (ymdMatch) return toMonthIso(Number(ymdMatch[1]), Number(ymdMatch[2]));
 
     const imfMatch = text.match(/^(\d{4})M(\d{1,2})$/i);
-    if (imfMatch) {
-      return toMonthIso(Number(imfMatch[1]), Number(imfMatch[2]));
-    }
+    if (imfMatch) return toMonthIso(Number(imfMatch[1]), Number(imfMatch[2]));
 
     const parsed = new Date(text);
     if (!Number.isNaN(parsed.getTime())) {
