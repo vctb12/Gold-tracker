@@ -233,4 +233,23 @@ const seedLandingPages: LandingPage[] = [
 ];
 
 
-export const landingPages: LandingPage[] = [...seedLandingPages, ...buildExpandedLandingPages()];
+export const landingPages: LandingPage[] = dedupeLandingPages([
+  ...seedLandingPages,
+  ...buildExpandedLandingPages(),
+]);
+
+
+function dedupeLandingPages(pages: LandingPage[]): LandingPage[] {
+  const bySlug = new Map<string, LandingPage>();
+  const bySignature = new Set<string>();
+
+  for (const page of pages) {
+    const signature = `${page.h1}::${page.sections.map((s) => s.heading).join("|")}`.toLowerCase();
+    if (bySlug.has(page.slug) || bySignature.has(signature)) continue;
+
+    bySlug.set(page.slug, page);
+    bySignature.add(signature);
+  }
+
+  return [...bySlug.values()];
+}

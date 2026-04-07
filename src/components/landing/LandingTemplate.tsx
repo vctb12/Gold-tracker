@@ -6,9 +6,11 @@ import { FAQAccordion } from "./FAQAccordion";
 import { VariantHero } from "./VariantHero";
 import { inferIntentFromSlug } from "@/lib/landing/inferIntent";
 import { RelatedLandingLinks } from "./RelatedLandingLinks";
+import { LandingHighlights } from "./LandingHighlights";
 
 export function LandingTemplate({ page }: { page: LandingPage }) {
   const intent = inferIntentFromSlug(page.slug);
+  const highlights = page.highlights ?? [];
 
   return (
     <main className="space-y-6 py-8">
@@ -18,7 +20,7 @@ export function LandingTemplate({ page }: { page: LandingPage }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm text-[var(--color-text-muted)]">
-              Output action: move users to dashboard, alerts, or estimator.
+              Action path: benchmark context → trust check → estimator/alerts/history route.
             </p>
           </div>
           <Link
@@ -33,12 +35,14 @@ export function LandingTemplate({ page }: { page: LandingPage }) {
         </div>
       </section>
 
+      <LandingHighlights highlights={highlights} />
+
       <TrustDisclosureBlock
         referenceNote={page.referenceNote}
         retailNote={page.retailNote}
       />
 
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-3">
         {page.sections.map((section) => (
           <LandingSection key={section.heading} section={section} />
         ))}
