@@ -3,25 +3,35 @@ import { LandingPage } from "@/types/landing";
 import { LandingSection } from "./LandingSection";
 import { TrustDisclosureBlock } from "./TrustDisclosureBlock";
 import { FAQAccordion } from "./FAQAccordion";
+import { VariantHero } from "./VariantHero";
+import { inferIntentFromSlug } from "@/lib/landing/inferIntent";
+import { RelatedLandingLinks } from "./RelatedLandingLinks";
 
 export function LandingTemplate({ page }: { page: LandingPage }) {
+  const intent = inferIntentFromSlug(page.slug);
+
   return (
     <main className="space-y-6 py-8">
-      <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-soft)]">
-        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-          Gold Reference Insights
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[var(--color-text)]">{page.h1}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">{page.intro}</p>
-        <div className="mt-4">
+      <VariantHero intent={intent} h1={page.h1} intro={page.intro} />
+
+      <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Output action: move users to dashboard, alerts, or estimator.
+            </p>
+          </div>
           <Link
             href={page.ctaHref}
             className="inline-flex rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-black"
+            data-cta-surface="landing-primary"
+            data-cta-intent={intent}
+            data-cta-slug={page.slug}
           >
             {page.ctaLabel}
           </Link>
         </div>
-      </header>
+      </section>
 
       <TrustDisclosureBlock
         referenceNote={page.referenceNote}
@@ -35,6 +45,8 @@ export function LandingTemplate({ page }: { page: LandingPage }) {
       </section>
 
       <FAQAccordion faqs={page.faqs} />
+
+      <RelatedLandingLinks currentSlug={page.slug} />
     </main>
   );
 }
