@@ -30,6 +30,7 @@ export function HeroPriceCard({ snapshot }: { snapshot: PriceSnapshot }) {
           sourceName={snapshot.provenance.sourceName}
           sourceInstrument={snapshot.provenance.sourceInstrument}
         />
+        {snapshot.quality.isDelayed ? <QualityBadge mode="DELAYED" /> : null}
         {snapshot.quality.isCached ? <QualityBadge mode="CACHED" /> : null}
         {snapshot.quality.isFallback ? <QualityBadge mode="FALLBACK" /> : null}
       </div>
