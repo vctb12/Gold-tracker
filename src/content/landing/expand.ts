@@ -1,9 +1,20 @@
 import { LandingPage } from "@/types/landing";
+import { INTENT_VARIANTS } from "./contentVariants";
 
 const countries = [
-  "usa", "uk", "india", "canada", "australia", "uae",
-  "singapore", "germany", "france", "japan", "brazil", "mexico"
-];
+  { key: "usa", label: "USA", nuance: "futures-driven sentiment and dealer premium spread" },
+  { key: "uk", label: "UK", nuance: "retail spread and product tax treatment by category" },
+  { key: "india", label: "India", nuance: "festival demand cycles and making-charge sensitivity" },
+  { key: "canada", label: "Canada", nuance: "cross-currency quotation and inventory depth" },
+  { key: "australia", label: "Australia", nuance: "regional quote timing and conversion dynamics" },
+  { key: "uae", label: "UAE", nuance: "souk vs dealer spread behavior" },
+  { key: "singapore", label: "Singapore", nuance: "bullion competition and premium compression windows" },
+  { key: "germany", label: "Germany", nuance: "product-tax interpretation and retail quote variance" },
+  { key: "france", label: "France", nuance: "regional distribution cost effects on final quotes" },
+  { key: "japan", label: "Japan", nuance: "currency-volatility pass-through to local pricing" },
+  { key: "brazil", label: "Brazil", nuance: "FX shock pass-through and spread asymmetry" },
+  { key: "mexico", label: "Mexico", nuance: "local demand pressure and quote dispersion" },
+] as const;
 
 const intents = [
   "today",
@@ -13,8 +24,10 @@ const intents = [
   "history-5-year",
   "spot-vs-retail",
   "alerts-guide",
-  "methodology"
-];
+  "methodology",
+] as const;
+
+type IntentKey = (typeof intents)[number];
 
 function titleCase(v: string) {
   return v.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -25,44 +38,40 @@ export function buildExpandedLandingPages(): LandingPage[] {
 
   for (const country of countries) {
     for (const intent of intents) {
-      const countryLabel = titleCase(country);
+      const variant = INTENT_VARIANTS[intent];
       const intentLabel = titleCase(intent);
 
       pages.push({
-        slug: `gold-price-${country}-${intent}`,
-        title: `Gold Price ${countryLabel} ${intentLabel} | Reference Insights`,
-        description: `Reference benchmark context for ${countryLabel}: ${intentLabel}.`,
-        h1: `Gold Price ${countryLabel} — ${intentLabel}`,
-        intro: `Purpose-built reference page for ${countryLabel} users tracking ${intentLabel}.`,
+        slug: `gold-price-${country.key}-${intent}`,
+        title: `Gold Price ${country.label} ${intentLabel} | Reference Insights`,
+        description: `Benchmark context for ${country.label} (${intentLabel}) with trust-first retail separation and practical interpretation guidance.`,
+        h1: `Gold Price ${country.label} — ${intentLabel}`,
+        intro: `${variant.introLead} Local lens: ${country.nuance}.`,
         referenceNote:
-          "Reference/spot values are benchmark context and may be delayed, cached, or fallback-labeled.",
+          "Reference/spot values are benchmark context and may be delayed, cached, or fallback-labeled depending on source availability.",
         retailNote:
-          "Retail/jewelry prices are separate outcomes with premiums, making fees, taxes, and seller spread.",
-        ctaLabel: intent.includes("history") ? "Open Full History" : intent === "alerts-guide" ? "Go to Alerts" : "Open Dashboard",
-        ctaHref: intent.includes("history") ? "/history" : intent === "alerts-guide" ? "/alerts" : "/",
-        sections: [
-          {
-            heading: "Reference context",
-            body: "Use benchmark values for trend/context, not final checkout assumptions."
-          },
-          {
-            heading: "Retail interpretation",
-            body: "Retail outcomes include taxes, fees, fabrication/making charges, and seller margin."
-          }
-        ],
-        faqs: [
-          {
-            q: "Is this retail checkout pricing?",
-            a: "No. This is benchmark reference context, not final store checkout."
-          },
-          {
-            q: "Why can local prices differ?",
-            a: "Local taxes, conversion spread, premiums, and inventory conditions."
-          }
-        ]
+          "Retail/jewelry outcomes include premium, making/fabrication, tax, logistics, and merchant spread.",
+        ctaLabel: variant.ctaLabel,
+        ctaHref: variant.ctaHref,
+        highlights: variant.highlights,
+        sections: variant.sections.map((section) => ({
+          heading: section.heading,
+          body: `${section.body} ${country.label} users should also account for ${country.nuance}.`,
+        })),
+        faqs: variant.faqs.map((faq, index) => ({
+          q: faq.q,
+          a:
+            index === 2
+              ? `${faq.a} This becomes especially important in ${country.label} due to ${country.nuance}.`
+              : faq.a,
+        })),
       });
     }
   }
 
   return pages;
+}
+
+export function getIntentKeys(): IntentKey[] {
+  return [...intents];
 }
