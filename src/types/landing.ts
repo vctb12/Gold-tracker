@@ -20,4 +20,5 @@ export type LandingPage = {
   ctaHref: string;
   sections: LandingSection[];
   faqs: LandingFaq[];
+  highlights?: string[];
 };

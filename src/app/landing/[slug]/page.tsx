@@ -8,22 +8,24 @@ export function generateStaticParams() {
   return getAllLandingSlugs().map((slug) => ({ slug }));
 }
 
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
-}): Metadata {
-  const page = getLandingPageBySlug(params.slug);
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const page = getLandingPageBySlug(slug);
   if (!page) return { title: "Not Found" };
   return createLandingMetadata(page);
 }
 
-export default function LandingPageRoute({
+export default async function LandingPageRoute({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const page = getLandingPageBySlug(params.slug);
+  const { slug } = await params;
+  const page = getLandingPageBySlug(slug);
   if (!page) notFound();
 
   return <LandingTemplate page={page} />;
