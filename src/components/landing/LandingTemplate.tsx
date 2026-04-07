@@ -7,7 +7,10 @@ import { VariantHero } from "./VariantHero";
 import { inferIntentFromSlug } from "@/lib/landing/inferIntent";
 import { RelatedLandingLinks } from "./RelatedLandingLinks";
 import { LandingHighlights } from "./LandingHighlights";
+<<<<<<< codex/plan-website-with-price-tracker-and-history-ir8w3g
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
+=======
+>>>>>>> main
 
 export function LandingTemplate({ page }: { page: LandingPage }) {
   const intent = inferIntentFromSlug(page.slug);

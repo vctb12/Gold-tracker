@@ -1,3 +1,4 @@
+<<<<<<< codex/plan-website-with-price-tracker-and-history-ir8w3g
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 
 export default function LearnPage() {
@@ -10,6 +11,11 @@ export default function LearnPage() {
         ]}
       />
 
+=======
+export default function LearnPage() {
+  return (
+    <main className="space-y-6 py-8">
+>>>>>>> main
       <header className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
         <h1 className="text-2xl font-semibold text-[var(--color-text)]">Methodology & trust</h1>
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">
