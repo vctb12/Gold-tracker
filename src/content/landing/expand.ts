@@ -1,11 +1,22 @@
 import { LandingPage } from "@/types/landing";
+import { intentTemplates, IntentKey } from "./templates";
 
 const countries = [
-  "usa", "uk", "india", "canada", "australia", "uae",
-  "singapore", "germany", "france", "japan", "brazil", "mexico"
-];
+  { key: "usa", label: "USA", nuance: "regional premium behavior and local tax treatment" },
+  { key: "uk", label: "UK", nuance: "dealer spread differences and product type effects" },
+  { key: "india", label: "India", nuance: "making-charge sensitivity and demand seasonality" },
+  { key: "canada", label: "Canada", nuance: "dealer inventory spread and currency overlay" },
+  { key: "australia", label: "Australia", nuance: "local premiums and currency conversion effects" },
+  { key: "uae", label: "UAE", nuance: "retail spread dynamics across gold souk channels" },
+  { key: "singapore", label: "Singapore", nuance: "premium competition among bullion dealers" },
+  { key: "germany", label: "Germany", nuance: "regional retail premium and VAT context by product" },
+  { key: "france", label: "France", nuance: "retail markup variability by seller profile" },
+  { key: "japan", label: "Japan", nuance: "currency-linked benchmark interpretation in JPY context" },
+  { key: "brazil", label: "Brazil", nuance: "local spread variance and FX pass-through behavior" },
+  { key: "mexico", label: "Mexico", nuance: "retail spread and local demand conditions" },
+] as const;
 
-const intents = [
+const intents: IntentKey[] = [
   "today",
   "per-gram",
   "per-ounce",
@@ -13,7 +24,7 @@ const intents = [
   "history-5-year",
   "spot-vs-retail",
   "alerts-guide",
-  "methodology"
+  "methodology",
 ];
 
 function titleCase(v: string) {
@@ -25,41 +36,35 @@ export function buildExpandedLandingPages(): LandingPage[] {
 
   for (const country of countries) {
     for (const intent of intents) {
-      const countryLabel = titleCase(country);
+      const t = intentTemplates[intent];
       const intentLabel = titleCase(intent);
 
       pages.push({
-        slug: `gold-price-${country}-${intent}`,
-        title: `Gold Price ${countryLabel} ${intentLabel} | Reference Insights`,
-        description: `Reference benchmark context for ${countryLabel}: ${intentLabel}.`,
-        h1: `Gold Price ${countryLabel} — ${intentLabel}`,
-        intro: `Purpose-built reference page for ${countryLabel} users tracking ${intentLabel}.`,
+        slug: `gold-price-${country.key}-${intent}`,
+        title: `Gold Price ${country.label} ${intentLabel} | Reference Insights`,
+        description: `Reference benchmark context for ${country.label}: ${intentLabel}, with clear retail separation.`,
+        h1: `Gold Price ${country.label} — ${intentLabel}`,
+        intro: `${t.intro} This page emphasizes ${country.nuance}.`,
         referenceNote:
           "Reference/spot values are benchmark context and may be delayed, cached, or fallback-labeled.",
         retailNote:
-          "Retail/jewelry prices are separate outcomes with premiums, making fees, taxes, and seller spread.",
-        ctaLabel: intent.includes("history") ? "Open Full History" : intent === "alerts-guide" ? "Go to Alerts" : "Open Dashboard",
-        ctaHref: intent.includes("history") ? "/history" : intent === "alerts-guide" ? "/alerts" : "/",
+          "Retail/jewelry outcomes include premiums, making/fabrication costs, taxes, and seller spread.",
+        ctaLabel: t.ctaLabel,
+        ctaHref: t.ctaHref,
         sections: [
           {
-            heading: "Reference context",
-            body: "Use benchmark values for trend/context, not final checkout assumptions."
+            heading: t.sectionAHeading,
+            body: `${t.sectionABody} In ${country.label}, interpretation should consider ${country.nuance}.`,
           },
           {
-            heading: "Retail interpretation",
-            body: "Retail outcomes include taxes, fees, fabrication/making charges, and seller margin."
-          }
+            heading: t.sectionBHeading,
+            body: `${t.sectionBBody} Always separate benchmark movement from final retail checkout outcomes.`,
+          },
         ],
         faqs: [
-          {
-            q: "Is this retail checkout pricing?",
-            a: "No. This is benchmark reference context, not final store checkout."
-          },
-          {
-            q: "Why can local prices differ?",
-            a: "Local taxes, conversion spread, premiums, and inventory conditions."
-          }
-        ]
+          { q: t.faq1q, a: t.faq1a },
+          { q: t.faq2q, a: `${t.faq2a} This is especially relevant in ${country.label}.` },
+        ],
       });
     }
   }
