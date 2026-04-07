@@ -7,6 +7,10 @@ import { VariantHero } from "./VariantHero";
 import { inferIntentFromSlug } from "@/lib/landing/inferIntent";
 import { RelatedLandingLinks } from "./RelatedLandingLinks";
 import { LandingHighlights } from "./LandingHighlights";
+<<<<<<< codex/plan-website-with-price-tracker-and-history-ir8w3g
+import { Breadcrumbs } from "@/components/common/Breadcrumbs";
+=======
+>>>>>>> main
 
 export function LandingTemplate({ page }: { page: LandingPage }) {
   const intent = inferIntentFromSlug(page.slug);
@@ -14,6 +18,7 @@ export function LandingTemplate({ page }: { page: LandingPage }) {
 
   return (
     <main className="space-y-6 py-8">
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Landing", href: "/landing" }, { label: page.h1 }]} />
       <VariantHero intent={intent} h1={page.h1} intro={page.intro} />
 
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
